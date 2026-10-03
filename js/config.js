@@ -7,7 +7,7 @@ export const CONFIG = {
   },
   ping: {
     warmupCount: 3,
-    count: 20,
+    count: 10,
     timeoutMs: 2000,
     warmupTimeoutMs: 5000,
     warmupDelayMs: 150,
