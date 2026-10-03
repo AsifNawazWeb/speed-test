@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="Measure your internet download, upload, ping, jitter and bufferbloat right in the browser." />
+    <meta name="theme-color" content="#0b1020" />
+    <meta name="color-scheme" content="dark light" />
+    <title>Speed Test</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="assets/icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="assets/icons/icon-192.png" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <script>
+      (() => {
+        try {
+          const saved = JSON.parse(localStorage.getItem('speedtest.settings.v1') || '{}');
+          document.documentElement.dataset.theme =
+            saved.theme || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        } catch {
+          document.documentElement.dataset.theme = 'dark';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="offlineBanner" class="banner" role="alert" hidden>
+      You are offline. The speed test needs an internet connection.
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <img src="assets/icons/icon.svg" alt="" width="32" height="32" />
+        <span>Speed Test</span>
+      </div>
+      <div class="topbar-actions">
+        <button id="installBtn" class="btn btn-ghost" type="button" hidden>Install app</button>
+        <button id="themeToggle" class="btn btn-ghost" type="button" aria-label="Toggle color theme">Theme</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="test-panel" aria-labelledby="testHeading">
+        <h1 id="testHeading" class="visually-hidden">Internet speed test</h1>
+
+        <div class="gauge-wrap">
+          <canvas id="gauge" class="gauge" role="img" aria-label="Current speed gauge"></canvas>
+          <div class="gauge-readout">
+            <div class="speed-value" aria-live="polite">
+              <span id="speedValue">0</span><span id="speedUnit" class="speed-unit">Mbps</span>
+            </div>
+            <div id="phaseLabel" class="phase-label">Ready when you are</div>
+            <div class="progress" aria-hidden="true">
+              <div id="progressBar" class="progress-bar"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-actions">
+          <button id="startBtn" class="btn btn-primary btn-lg" type="button">Start test</button>
+          <div class="segmented" role="group" aria-label="Test duration">
+            <button id="durationQuick" class="seg-btn is-active" type="button" data-duration="quick">Quick 10s</button>
+            <button id="durationFull" class="seg-btn" type="button" data-duration="full">Full 30s</button>
+          </div>
+          <div class="segmented" role="group" aria-label="Speed unit">
+            <button id="unitMbps" class="seg-btn is-active" type="button" data-unit="mbps">Mbps</button>
+            <button id="unitMBs" class="seg-btn" type="button" data-unit="mbs">MB/s</button>
+          </div>
+        </div>
+
+        <canvas id="sparkline" class="sparkline" aria-label="Live speed graph" role="img"></canvas>
+      </section>
+
+      <section class="stats" aria-label="Results">
+        <article class="stat-card">
+          <h2>Ping</h2>
+          <p class="stat-value"><span id="statPing">--</span><small>ms</small></p>
+        </article>
+        <article class="stat-card">
+          <h2>Jitter</h2>
+          <p class="stat-value"><span id="statJitter">--</span><small>ms</small></p>
+        </article>
+        <article class="stat-card">
+          <h2>Loss</h2>
+          <p class="stat-value"><span id="statLoss">--</span><small>%</small></p>
+        </article>
+        <article class="stat-card accent-down">
+          <h2>Download</h2>
+          <p class="stat-value"><span id="statDownload">--</span><small>Mbps</small></p>
+        </article>
+        <article class="stat-card accent-up">
+          <h2>Upload</h2>
+          <p class="stat-value"><span id="statUpload">--</span><small>Mbps</small></p>
+        </article>
+        <article class="stat-card">
+          <h2>Bufferbloat</h2>
+          <p class="stat-value"><span id="statBufferbloat">--</span><small id="statBufferbloatDetail"></small></p>
+        </article>
+      </section>
+
+      <section class="panel" aria-label="Connection details">
+        <h2 class="panel-title">Connection</h2>
+        <dl class="connection-grid">
+          <div><dt>Public IP</dt><dd id="infoIp">--</dd></div>
+          <div><dt>Network type</dt><dd id="infoType">--</dd></div>
+          <div><dt>Reported downlink</dt><dd id="infoDownlink">--</dd></div>
+          <div><dt>Reported RTT</dt><dd id="infoRtt">--</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel" aria-label="Result actions">
+        <h2 class="panel-title">Result</h2>
+        <div class="result-meta">
+          <span id="resultDelta" class="delta"></span>
+        </div>
+        <div class="actions-row">
+          <button id="shareBtn" class="btn" type="button" disabled>Share card</button>
+          <button id="copyBtn" class="btn" type="button" disabled>Copy summary</button>
+          <button id="exportJsonBtn" class="btn btn-ghost" type="button">Export JSON</button>
+          <button id="exportCsvBtn" class="btn btn-ghost" type="button">Export CSV</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="Test history">
+        <div class="panel-head">
+          <h2 class="panel-title">History</h2>
+          <button id="clearHistoryBtn" class="btn btn-ghost btn-sm" type="button">Clear</button>
+        </div>
+        <canvas id="trendChart" class="trend-chart" aria-label="History trend chart" role="img"></canvas>
+        <div class="table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th scope="col">When</th>
+                <th scope="col">Ping</th>
+                <th scope="col">Download</th>
+                <th scope="col">Upload</th>
+                <th scope="col">Grade</th>
+              </tr>
+            </thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+          <p id="historyEmpty" class="empty">No tests yet. Run your first test above.</p>
+        </div>
+      </section>
+
+      <p class="caveat">
+        This test measures throughput to Cloudflare's nearest edge network. Results can be limited by
+        Wi-Fi, browser or device performance. All data stays on your device; only the test requests
+        themselves are sent.
+      </p>
+    </main>
+
+    <script type="module" src="js/app.js"></script>
+  </body>
+</html>

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Speed Test">
+  <defs>
+    <linearGradient id="arc" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="#60a5fa" />
+      <stop offset="1" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="#0b1020" />
+  <path d="M135.8 376.2 A170 170 0 1 1 376.2 376.2" fill="none" stroke="#1a2338" stroke-width="36" stroke-linecap="round" />
+  <path d="M135.8 376.2 A170 170 0 1 1 426 256" fill="none" stroke="url(#arc)" stroke-width="36" stroke-linecap="round" />
+  <line x1="256" y1="256" x2="406" y2="256" stroke="#eef2ff" stroke-width="20" stroke-linecap="round" />
+  <circle cx="256" cy="256" r="24" fill="#22d3ee" />
+</svg>
