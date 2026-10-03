@@ -39,6 +39,7 @@ const els = {
   startBtn: $('startBtn'),
   sparkline: $('sparkline'),
   statPing: $('statPing'),
+  statPingDetail: $('statPingDetail'),
   statJitter: $('statJitter'),
   statLoss: $('statLoss'),
   statDownload: $('statDownload'),
@@ -126,6 +127,7 @@ const updateUnitLabels = () => {
 
 const resetStats = () => {
   els.statPing.textContent = '--';
+  els.statPingDetail.textContent = '';
   els.statJitter.textContent = '--';
   els.statLoss.textContent = '--';
   els.statDownload.textContent = '--';
@@ -138,6 +140,7 @@ const resetStats = () => {
 
 const renderResult = (result) => {
   els.statPing.textContent = result.ping == null ? '--' : formatNumber(result.ping, 0);
+  els.statPingDetail.textContent = result.pingMin == null ? '' : `min ${formatNumber(result.pingMin, 0)} ms`;
   els.statJitter.textContent = result.jitter == null ? '--' : formatNumber(result.jitter, 0);
   els.statLoss.textContent = result.loss == null ? '--' : formatNumber(result.loss, 1);
   els.statDownload.textContent = result.download == null ? '--' : formatNumber(toUnit(result.download, settings.unit));
@@ -172,9 +175,10 @@ const updateConnectionInfo = () => {
   els.infoRtt.textContent = connection?.rtt != null ? `${connection.rtt} ms` : '--';
 };
 
-const onPingProgress = ({ done, total, ping, jitter, loss }) => {
+const onPingProgress = ({ done, total, ping, pingMin, jitter, loss }) => {
   setPhase(`Measuring latency... ${done}/${total}`, done / total);
   els.statPing.textContent = ping == null ? '--' : formatNumber(ping, 0);
+  els.statPingDetail.textContent = pingMin == null ? '' : `min ${formatNumber(pingMin, 0)} ms`;
   els.statJitter.textContent = jitter == null ? '--' : formatNumber(jitter, 0);
   els.statLoss.textContent = formatNumber(loss, 1);
 };
@@ -244,6 +248,7 @@ async function runTest() {
     if (controller.signal.aborted) return;
     Object.assign(result, {
       ping: latency.ping,
+      pingMin: latency.pingMin,
       jitter: latency.jitter,
       loss: latency.loss,
       ip: latency.ip,

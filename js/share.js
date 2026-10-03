@@ -11,7 +11,8 @@ export function buildSummary(result, unit) {
   const lines = [`Speed Test result (${new Date(result.ts).toLocaleString()})`];
   lines.push(`Download: ${formatSpeed(result.download, unit)}`);
   lines.push(`Upload: ${formatSpeed(result.upload, unit)}`);
-  lines.push(`Ping: ${formatNumber(result.ping, 0)} ms`);
+  const pingMin = result.pingMin == null ? '' : ` (min ${formatNumber(result.pingMin, 0)} ms)`;
+  lines.push(`Ping: ${formatNumber(result.ping, 0)} ms${pingMin}`);
   lines.push(`Jitter: ${formatNumber(result.jitter, 0)} ms`);
   if (result.loss != null) lines.push(`Packet loss: ${formatNumber(result.loss, 1)}%`);
   if (result.bufferbloat) {

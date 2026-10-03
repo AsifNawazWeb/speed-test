@@ -37,17 +37,53 @@ const withTimeout = (timeoutMs, outerSignal) => {
 
 const isAbort = (error) => error && (error.name === 'AbortError' || error.name === 'TimeoutError');
 
-async function probeLatency(signal) {
-  const { signal: timedSignal, cleanup } = withTimeout(CONFIG.ping.timeoutMs, signal);
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+export const parseServerTiming = (header) => {
+  if (!header) return null;
+  const match = header.match(/cfL4;desc="([^"]*)"/i);
+  if (!match) return null;
+  const params = new URLSearchParams(match[1].replace(/^\?/, ''));
+  const micros = (key) => {
+    const value = Number(params.get(key));
+    return Number.isFinite(value) ? value / 1000 : null;
+  };
+  return { rtt: micros('rtt'), minRtt: micros('min_rtt'), rttVar: micros('rtt_var') };
+};
+
+const resourceTimingRtt = (url) => {
+  const entries = performance.getEntriesByName(url, 'resource');
+  const entry = entries[entries.length - 1];
+  if (!entry || !(entry.responseStart > 0) || !(entry.requestStart > 0)) return null;
+  return {
+    rtt: entry.responseStart - entry.requestStart,
+    newConnection: entry.connectEnd > entry.connectStart,
+  };
+};
+
+async function probeLatency(signal, timeoutMs = CONFIG.ping.timeoutMs) {
+  const url = CONFIG.endpoints.down(0);
+  const { signal: timedSignal, cleanup } = withTimeout(timeoutMs, signal);
   const started = now();
   try {
-    const response = await fetch(CONFIG.endpoints.down(0), {
+    const response = await fetch(url, {
       cache: 'no-store',
       signal: timedSignal,
     });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const serverTiming = parseServerTiming(response.headers.get('server-timing'));
+    const ip = response.headers.get('cf-meta-ip');
     await response.arrayBuffer();
-    return { rtt: now() - started, ip: response.headers.get('cf-meta-ip') };
+    const timing = resourceTimingRtt(url);
+    const wallRtt = now() - started;
+    const rtt = serverTiming?.rtt ?? timing?.rtt ?? wallRtt;
+    return {
+      rtt,
+      minRtt: serverTiming?.minRtt ?? rtt,
+      rttVar: serverTiming?.rttVar ?? null,
+      newConnection: timing?.newConnection ?? false,
+      ip,
+    };
   } finally {
     cleanup();
   }
@@ -55,41 +91,64 @@ async function probeLatency(signal) {
 
 export async function measureLatency({ signal, onProgress } = {}) {
   for (let i = 0; i < CONFIG.ping.warmupCount; i += 1) {
+    if (signal?.aborted) break;
     try {
-      await probeLatency(signal);
+      await probeLatency(signal, CONFIG.ping.warmupTimeoutMs);
     } catch {
-      break;
+      /* retry the warm-up */
     }
+    if (i < CONFIG.ping.warmupCount - 1) await sleep(CONFIG.ping.warmupDelayMs);
   }
 
   const samples = [];
+  const allSamples = [];
+  const minSamples = [];
+  const jitterSamples = [];
   let failures = 0;
   let ip = null;
+
+  const snapshot = () => {
+    const usable = samples.length ? samples : allSamples;
+    const usableMin = minSamples.length ? minSamples : allSamples;
+    return {
+      ping: median(usable),
+      pingMin: usableMin.length ? Math.min(...usableMin) : null,
+      jitter: jitterSamples.length ? median(jitterSamples) : jitter(usable),
+    };
+  };
 
   for (let i = 0; i < CONFIG.ping.count; i += 1) {
     if (signal?.aborted) break;
     try {
-      const { rtt, ip: probeIp } = await probeLatency(signal);
-      samples.push(rtt);
-      if (probeIp) ip = probeIp;
-    } catch (error) {
-      if (isAbort(error)) break;
+      const probe = await probeLatency(signal);
+      allSamples.push(probe.rtt);
+      minSamples.push(probe.minRtt);
+      if (!probe.newConnection) samples.push(probe.rtt);
+      if (probe.rttVar != null) jitterSamples.push(probe.rttVar);
+      if (probe.ip) ip = probe.ip;
+    } catch {
+      if (signal?.aborted) break;
       failures += 1;
     }
+    const stats = snapshot();
     onProgress?.({
       done: i + 1,
       total: CONFIG.ping.count,
-      ping: median(samples),
-      jitter: jitter(samples),
+      ping: stats.ping,
+      pingMin: stats.pingMin,
+      jitter: stats.jitter,
       loss: (failures / CONFIG.ping.count) * 100,
     });
+    if (i < CONFIG.ping.count - 1) await sleep(CONFIG.ping.probeDelayMs);
   }
 
+  const stats = snapshot();
   return {
-    ping: median(samples),
-    jitter: jitter(samples),
+    ping: stats.ping,
+    pingMin: stats.pingMin,
+    jitter: stats.jitter,
     loss: (failures / CONFIG.ping.count) * 100,
-    samples,
+    samples: samples.length ? samples : allSamples,
     ip,
   };
 }

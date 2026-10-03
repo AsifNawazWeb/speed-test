@@ -311,6 +311,14 @@ html[data-theme="dark"] .btn-primary {
   margin-left: 0.3rem;
 }
 
+.stat-detail {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  min-height: 1em;
+}
+
 .accent-down .stat-value {
   color: var(--down);
 }

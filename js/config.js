@@ -6,9 +6,12 @@ export const CONFIG = {
     up: 'https://speed.cloudflare.com/__up',
   },
   ping: {
-    warmupCount: 1,
-    count: 10,
+    warmupCount: 3,
+    count: 20,
     timeoutMs: 2000,
+    warmupTimeoutMs: 5000,
+    warmupDelayMs: 150,
+    probeDelayMs: 150,
   },
   download: {
     streams: 4,
