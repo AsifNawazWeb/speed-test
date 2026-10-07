@@ -53,6 +53,7 @@ main {
   margin: 0 auto;
   padding: 0.6rem 1rem 3rem;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 0.9rem;
 }
 
@@ -119,6 +120,7 @@ h2 {
   font: inherit;
   font-weight: 600;
   cursor: pointer;
+  touch-action: manipulation;
   transition: transform 0.12s ease, background 0.15s ease, border-color 0.15s ease;
 }
 
@@ -244,6 +246,17 @@ html[data-theme="dark"] .btn-primary {
   align-items: center;
 }
 
+.seg-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.seg-caption {
+  display: none;
+}
+
 .segmented {
   display: inline-flex;
   background: var(--surface-2);
@@ -262,6 +275,7 @@ html[data-theme="dark"] .btn-primary {
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
   cursor: pointer;
+  touch-action: manipulation;
 }
 
 .seg-btn.is-active {
@@ -285,12 +299,12 @@ html[data-theme="dark"] .btn-primary {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.5rem 0.7rem;
+  padding: 0.75rem 0.8rem;
   box-shadow: var(--shadow);
 }
 
 .stat-card h2 {
-  font-size: 0.72rem;
+  font-size: 0.78rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
@@ -299,13 +313,14 @@ html[data-theme="dark"] .btn-primary {
 
 .stat-value {
   margin: 0.2rem 0 0;
-  font-size: 1.15rem;
+  font-size: 1.3rem;
+  line-height: 1.25;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
 
 .stat-value small {
-  font-size: 0.75rem;
+  font-size: 0.82rem;
   font-weight: 600;
   color: var(--muted);
   margin-left: 0.3rem;
@@ -313,7 +328,7 @@ html[data-theme="dark"] .btn-primary {
 
 .stat-detail {
   margin: 0.25rem 0 0;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: var(--muted);
   min-height: 1em;
@@ -498,6 +513,25 @@ html[data-theme="dark"] .grade-f {
 }
 
 @media (max-width: 560px) {
+  .topbar {
+    flex-wrap: wrap;
+    row-gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+  }
+
+  .brand {
+    white-space: nowrap;
+  }
+
+  .topbar-actions {
+    margin-left: auto;
+  }
+
+  .topbar-actions .btn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
   .stats {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -509,6 +543,7 @@ html[data-theme="dark"] .grade-f {
   .test-actions {
     flex-direction: row;
     flex-wrap: wrap;
+    align-items: baseline;
     gap: 0.35rem;
   }
 
@@ -529,10 +564,22 @@ html[data-theme="dark"] .grade-f {
     font-size: 0.78rem;
   }
 
+  .seg-long {
+    display: none;
+  }
+
+  .seg-caption {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--muted);
+    line-height: 1;
+  }
+
   .stat-detail {
     display: none;
   }
 
+  body.is-running .test-actions .seg-group,
   body.is-running .test-actions .segmented {
     display: none;
   }

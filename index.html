@@ -58,9 +58,12 @@
 
         <div class="test-actions">
           <button id="startBtn" class="btn btn-primary btn-lg" type="button">Start test</button>
-          <div class="segmented" role="group" aria-label="Test duration">
-            <button id="durationQuick" class="seg-btn is-active" type="button" data-duration="quick">Quick 10s</button>
-            <button id="durationFull" class="seg-btn" type="button" data-duration="full">Full 30s</button>
+          <div class="seg-group">
+            <div class="segmented" role="group" aria-label="Test duration">
+              <button id="durationQuick" class="seg-btn is-active" type="button" data-duration="quick"><span class="seg-long">Quick </span>10s</button>
+              <button id="durationFull" class="seg-btn" type="button" data-duration="full"><span class="seg-long">Full </span>30s</button>
+            </div>
+            <span class="seg-caption">Test duration</span>
           </div>
           <div class="segmented" role="group" aria-label="Speed unit">
             <button id="unitMbps" class="seg-btn is-active" type="button" data-unit="mbps">Mbps</button>
