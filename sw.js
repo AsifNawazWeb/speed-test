@@ -1,4 +1,4 @@
-const CACHE = 'speed-test-v4';
+const CACHE = 'speed-test-v5';
 
 const SHELL = [
   './',
