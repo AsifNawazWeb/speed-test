@@ -269,6 +269,7 @@ async function runTest() {
     });
     if (controller.signal.aborted) return;
     result.download = download.mbps;
+    els.statDownload.textContent = formatNumber(toUnit(download.mbps, settings.unit));
     gauge.setValue(download.mbps);
     displaySpeed(download.mbps);
 
@@ -284,6 +285,7 @@ async function runTest() {
     });
     if (controller.signal.aborted) return;
     result.upload = upload.mbps;
+    els.statUpload.textContent = formatNumber(toUnit(upload.mbps, settings.unit));
     gauge.setValue(upload.mbps);
     displaySpeed(upload.mbps);
 
